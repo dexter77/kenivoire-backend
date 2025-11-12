@@ -1,47 +1,60 @@
-from django.shortcuts import render
-from rest_framework import viewsets, permissions, status
+from rest_framework import viewsets, permissions, generics, serializers
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from .models import Conversation, Message
 from .serializers import ConversationSerializer, MessageSerializer
 from annonces.models import Ad
 
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def unread_messages_count(request):
+    count = Message.objects.filter(
+        conversation__participants=request.user,
+        read=False
+    ).exclude(sender=request.user).count()
+
+    return Response({"unread_count": count})
+
 class ConversationViewSet(viewsets.ModelViewSet):
+    queryset = Conversation.objects.all().order_by('-created_at')
     serializer_class = ConversationSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
+        # return self.request.user.conversations.all()
         return Conversation.objects.filter(participants=self.request.user)
 
-    def create(self, request, *args, **kwargs):
-        ad_id = request.data.get('ad')
-        ad = Ad.objects.get(id=ad_id)
+    def perform_create(self, serializer):
+        conversation = serializer.save()
+        conversation.participants.add(self.request.user)
 
-        # Vérifie si une conversation existe déjà entre les deux utilisateurs pour cette annonce
-        existing = Conversation.objects.filter(
-            ad=ad, participants=request.user
-        ).first()
-
-        if existing:
-            return Response(ConversationSerializer(existing).data)
-
-        conversation = Conversation.objects.create(ad=ad)
-        conversation.participants.add(request.user, ad.owner)
-        serializer = ConversationSerializer(conversation)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        # Vérifie que l'utilisateur est participant
+        if request.user not in instance.participants.all():
+            return Response({"detail": "Action non autorisée."}, status=403)
+        self.perform_destroy(instance)
+        return Response(status=204)
 
 
 class MessageViewSet(viewsets.ModelViewSet):
+    queryset = Message.objects.all().order_by('created_at')
     serializer_class = MessageSerializer
     permission_classes = [permissions.IsAuthenticated]
 
-    def get_queryset(self):
-        return Message.objects.filter(conversation__participants=self.request.user)
-
     def perform_create(self, serializer):
         conversation_id = self.request.data.get('conversation')
-        conversation = Conversation.objects.get(id=conversation_id)
+        content = self.request.data.get('content')
 
-        if self.request.user not in conversation.participants.all():
-            raise PermissionError("Vous ne pouvez pas envoyer de message dans cette conversation.")
+        if not conversation_id:
+            raise serializers.ValidationError({"conversation": "ID de conversation requis"})
 
-        serializer.save(sender=self.request.user, conversation=conversation)
+        try:
+            conversation = Conversation.objects.get(id=conversation_id)
+        except Conversation.DoesNotExist:
+            raise serializers.ValidationError({"conversation": "Conversation introuvable"})
+
+        serializer.save(sender=self.request.user, conversation=conversation, content=content)

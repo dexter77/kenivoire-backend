@@ -4,7 +4,7 @@ from django.conf.urls.static import static
 from django.urls import path, include
 from rest_framework import routers
 from annonces.views import AdViewSet, CategoryViewSet
-from users.views import me_view
+from users.views import MeView
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 router = routers.DefaultRouter()
@@ -14,7 +14,7 @@ router.register('categories', CategoryViewSet, basename='category')
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include(router.urls)),
-    path('api/me/', me_view, name='me'),
+    path('api/me/', MeView.as_view(), name='me'),
 
     # JWT Auth
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),

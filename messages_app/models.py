@@ -9,6 +9,9 @@ class Conversation(models.Model):
     ad = models.ForeignKey(Ad, on_delete=models.CASCADE, related_name='conversations')
     participants = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name="conversations")
     created_at = models.DateTimeField(auto_now_add=True)
+    deleted_for = models.ManyToManyField(
+        settings.AUTH_USER_MODEL, related_name="deleted_conversations", blank=True
+        )
     class Meta:
         ordering = ['-created_at']
 

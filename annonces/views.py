@@ -1,4 +1,6 @@
 from rest_framework import viewsets, permissions, generics
+from rest_framework.decorators import action
+from rest_framework.response import Response
 from django.db.models import Q
 from .models import Ad, Categorie
 from .serializers import AdSerializer, CategorySerializer
@@ -12,6 +14,22 @@ class AdViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         # Associe automatiquement l'annonce à l'utilisateur connecté
         serializer.save(owner=self.request.user)
+
+    # 🔹 Incrémentation automatique à chaque consultation
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        instance.views = (instance.views or 0) + 1
+        instance.save(update_fields=["views"])
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
+
+    # 🔹 (Optionnel) endpoint spécifique pour incrémenter depuis le front
+    @action(detail=True, methods=["post"])
+    def increment_view(self, request, pk=None):
+        ad = self.get_object()
+        ad.views = (ad.views or 0) + 1
+        ad.save(update_fields=["views"])
+        return Response({"views": ad.views})
 
 
 class AdListCreateView(generics.ListCreateAPIView):

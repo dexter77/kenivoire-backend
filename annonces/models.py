@@ -30,6 +30,7 @@ class Ad(models.Model):
     image2 = models.ImageField(upload_to='ad_images/', blank=True, null=True)
     image3 = models.ImageField(upload_to='ad_images/', blank=True, null=True)
     views = models.PositiveIntegerField(default=0)
+    location = models.CharField(max_length=255)
     categorie = models.ForeignKey(
         Categorie,
         on_delete=models.SET_NULL,

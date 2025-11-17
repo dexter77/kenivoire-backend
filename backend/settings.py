@@ -152,7 +152,7 @@ USE_I18N = True
 USE_TZ = True
 
 # Paramètres CORS
-CORS_ALLOW_ALL_ORIGINS = True  # En développement uniquement
+CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
 
 # Static files (CSS, JavaScript, Images)

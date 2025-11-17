@@ -7,7 +7,7 @@ User = get_user_model()
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('id', 'username', 'city')
+        fields = '__all__'
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
@@ -17,10 +17,10 @@ class CategorySerializer(serializers.ModelSerializer):
 class UserSimpleSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username', 'city']
+        fields = ['id', 'username', 'city', 'joined_date']
 
 class AdSerializer(serializers.ModelSerializer):
-    owner = UserSimpleSerializer(read_only=True)
+    owner = UserSerializer(read_only=True)
     categorie = CategorySerializer(read_only=True)
     categorie_id = serializers.PrimaryKeyRelatedField(
         queryset=Categorie.objects.all(),

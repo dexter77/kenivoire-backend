@@ -7,7 +7,7 @@ User = get_user_model()
 
 class Categorie(models.Model):
     name = models.CharField(max_length=100, unique=True)
-    icon = models.ImageField(upload_to='category_icons/', blank=True, null=True)
+    icon = models.CharField(max_length=50, default="📦")
 
     class Meta:
         verbose_name = "Categorie"
@@ -31,6 +31,7 @@ class Ad(models.Model):
     image3 = models.ImageField(upload_to='ad_images/', blank=True, null=True)
     views = models.PositiveIntegerField(default=0)
     location = models.CharField(max_length=255)
+    premium = models.BooleanField(default=False)
     categorie = models.ForeignKey(
         Categorie,
         on_delete=models.SET_NULL,

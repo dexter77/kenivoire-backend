@@ -70,7 +70,7 @@ class AdListCreateView(generics.ListCreateAPIView):
 
         # --- 🗂️ Filtrer par catégorie ---
         if categorie:
-            queryset = queryset.filter(category__name__icontains=categorie)
+            queryset = queryset.filter(categorie__name__icontains=categorie)
 
         return queryset
 
